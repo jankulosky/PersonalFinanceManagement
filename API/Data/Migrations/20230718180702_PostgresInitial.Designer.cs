@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230718131230_PostgresInitial")]
+    [Migration("20230718180702_PostgresInitial")]
     partial class PostgresInitial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,6 +54,9 @@ namespace API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CategoryModelCode")
+                        .HasColumnType("text");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasColumnType("text");
@@ -76,12 +79,9 @@ namespace API.Data.Migrations
                     b.Property<int?>("MCC")
                         .HasColumnType("integer");
 
-                    b.Property<string>("categoryModelCode")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("categoryModelCode");
+                    b.HasIndex("CategoryModelCode");
 
                     b.ToTable("Transactions");
                 });
@@ -114,11 +114,11 @@ namespace API.Data.Migrations
 
             modelBuilder.Entity("API.Models.TransactionModel", b =>
                 {
-                    b.HasOne("API.Models.CategoryModel", "categoryModel")
+                    b.HasOne("API.Models.CategoryModel", "CategoryModel")
                         .WithMany()
-                        .HasForeignKey("categoryModelCode");
+                        .HasForeignKey("CategoryModelCode");
 
-                    b.Navigation("categoryModel");
+                    b.Navigation("CategoryModel");
                 });
 
             modelBuilder.Entity("API.Models.TransactionSplit", b =>

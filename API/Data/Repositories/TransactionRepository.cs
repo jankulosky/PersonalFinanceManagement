@@ -1,5 +1,6 @@
 ﻿using API.Data.Interfaces;
 using API.DTOs;
+using API.Models;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,19 @@ namespace API.Data.Repositories
                 .ToListAsync();
 
             return result;
+        }
+
+        public async Task<List<TransactionModel>> InsertTransactions(List<TransactionModel> transactions)
+        {
+            var DbTransaction = _context.Database.BeginTransaction();
+
+            await _context.Transactions.AddRangeAsync(transactions);
+
+            await _context.SaveChangesAsync();
+
+            await DbTransaction.CommitAsync();
+
+            return transactions;
         }
     }
 }

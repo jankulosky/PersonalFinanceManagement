@@ -36,14 +36,14 @@ namespace API.Data.Migrations
                     Currency = table.Column<string>(type: "text", nullable: false),
                     MCC = table.Column<int>(type: "integer", nullable: true),
                     Kind = table.Column<string>(type: "text", nullable: false),
-                    categoryModelCode = table.Column<string>(type: "text", nullable: true)
+                    CategoryModelCode = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Transactions_Categories_categoryModelCode",
-                        column: x => x.categoryModelCode,
+                        name: "FK_Transactions_Categories_CategoryModelCode",
+                        column: x => x.CategoryModelCode,
                         principalTable: "Categories",
                         principalColumn: "Code");
                 });
@@ -75,9 +75,9 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_categoryModelCode",
+                name: "IX_Transactions_CategoryModelCode",
                 table: "Transactions",
-                column: "categoryModelCode");
+                column: "CategoryModelCode");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TransactionSplits_CategoryCode",

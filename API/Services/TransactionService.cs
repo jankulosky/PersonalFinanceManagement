@@ -32,7 +32,40 @@ namespace API.Services
 
                     List<TransactionModel> transactions = csvReader.GetRecords<TransactionModel>().ToList();
 
-                    return transactions;
+                    transactions = transactions.Where(t =>
+                    {
+                        if (t.Amount < 0)
+                        {
+                            return false;
+                        }
+                        else if (t.Id == null)
+                        {
+                            return false;
+                        }
+                        else if (t.Kind == null)
+                        {
+                            return false;
+                        }
+                        else if (t.Kind == null)
+                        {
+                            return false;
+                        }
+                        else if (t.Direction == null)
+                        {
+                            return false;
+                        }
+                        return true;
+                    }).ToList();
+
+                    foreach (var transaction in transactions)
+                    {
+                        if (transaction.Date.Kind == DateTimeKind.Unspecified)
+                        {
+                            transaction.Date = DateTime.SpecifyKind(transaction.Date, DateTimeKind.Utc);
+                        }
+                    }
+
+                    return await _transactionRepository.InsertTransactions(transactions);
                 }
             }
         }
