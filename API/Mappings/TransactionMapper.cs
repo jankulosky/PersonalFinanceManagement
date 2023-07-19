@@ -3,7 +3,7 @@ using CsvHelper.Configuration;
 
 namespace API.Mappings
 {
-    public class TransactionMapper : ClassMap<TransactionModel>
+    public class TransactionMapper : ClassMap<Transaction>
     {
         public TransactionMapper()
         {

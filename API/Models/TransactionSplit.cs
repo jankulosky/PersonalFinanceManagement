@@ -8,8 +8,8 @@ namespace API.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public TransactionModel Transaction { get; set; }
-        public CategoryModel Category { get; set; }
+        public Transaction Transaction { get; set; }
+        public Category Category { get; set; }
         public double Amount { get; set; }
     }
 }

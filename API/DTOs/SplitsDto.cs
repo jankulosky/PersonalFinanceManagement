@@ -4,7 +4,7 @@ namespace API.DTOs
 {
     public class SplitsDto
     {
-        public CategoryModel Category { get; set; }
+        public Category Category { get; set; }
         public double Amount { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace API.Mappings
     {
         public AutoMapperProfile()
         {
-            CreateMap<TransactionModel, TransactionDto>()
+            CreateMap<Transaction, TransactionDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.BeneficiaryName, opt => opt.MapFrom(src => src.BeneficiaryName))
                 .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date))

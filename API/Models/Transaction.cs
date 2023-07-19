@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.Models
 {
-    public class TransactionModel
+    public class Transaction
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -18,7 +18,7 @@ namespace API.Models
         [ForeignKey("MccCodes")]
         public int? MCC { get; set; }
         public string Kind { get; set; }
-        public CategoryModel? CategoryModel { get; set; }
+        public Category? CategoryModel { get; set; }
         public List<TransactionSplit> Splits { get; set; }
     }
 }

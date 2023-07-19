@@ -1,6 +1,5 @@
-using API.Container;
+using API.Extensions;
 using API.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +20,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseCors(ApplicationServiceExtension.AngularUiOrigins);
 
 app.UseAuthorization();
 

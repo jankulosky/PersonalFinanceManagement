@@ -1,10 +1,12 @@
 ﻿using API.Data;
+using API.Data.Interfaces;
 using API.Data.Repositories;
 using API.Mappings;
 using API.Services;
+using API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace API.Container
+namespace API.Extensions
 {
     public static class ApplicationServiceExtension
     {
@@ -28,8 +30,11 @@ namespace API.Container
             {
                 options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
             });
-            services.AddScoped<TransactionService>();
-            services.AddScoped<TransactionRepository>();
+
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
 
             return services;
         }

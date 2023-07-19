@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.Models
 {
-    public class CategoryModel
+    public class Category
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

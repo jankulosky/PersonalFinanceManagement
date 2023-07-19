@@ -5,9 +5,9 @@ namespace API.Data
 {
     public class DataContext : DbContext
     {
-        public DbSet<TransactionModel> Transactions => Set<TransactionModel>();
+        public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<TransactionSplit> TransactionSplits => Set<TransactionSplit>();
-        public DbSet<CategoryModel> Categories => Set<CategoryModel>();
+        public DbSet<Category> Categories => Set<Category>();
 
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
