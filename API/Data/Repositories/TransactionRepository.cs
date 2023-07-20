@@ -1,8 +1,11 @@
 ﻿using API.Data.Interfaces;
 using API.DTOs;
+using API.Enumerations;
+using API.Helpers;
 using API.Mappings;
 using API.Models;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -22,47 +25,74 @@ namespace API.Data.Repositories
 
         public async Task<List<Transaction>> ImportTransactionsFromFile(IFormFile csv)
         {
-            using var streamReader = new StreamReader(csv.OpenReadStream());
-            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+            var streamReader = new StreamReader(csv.OpenReadStream());
+            var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
             csvReader.Context.RegisterClassMap<TransactionMapper>();
 
             List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
 
-            transactions = transactions.Where(t => t.Amount <= 0 && t.Id != null && !string.IsNullOrEmpty(t.Kind) && !string.IsNullOrEmpty(t.Direction))
-                .ToList();
-
-            foreach (var transaction in transactions)
-            {
-                if (transaction.Date.Kind == DateTimeKind.Unspecified)
-                {
-                    transaction.Date = DateTime.SpecifyKind(transaction.Date, DateTimeKind.Utc);
-                }
-            }
-
             return await InsertTransactions(transactions);
         }
 
-        public async Task<List<TransactionDto>> GetTransactionList(string transactionKind, DateTime? startDate, DateTime? endDate, int? page, int? pageSize)
+        public async Task<PagedList<TransactionDto>> GetTransactionList(QueryParams queryParams)
         {
-            var transactions = _context.Transactions.Where(t => t.Kind == transactionKind);
+            var query = _context.Transactions
+                .Include(x => x.Category)
+                .Include(x => x.Splits)
+                .AsQueryable();
 
-            if (startDate != null)
+            if (queryParams.TransactionKind.HasValue)
             {
-                transactions = transactions.Where(t => t.Date >= startDate);
+                query = query.Where(t => t.Kind == queryParams.TransactionKind.Value);
             }
 
-            if (endDate != null)
+            if (queryParams.StartDate.HasValue)
             {
-                transactions = transactions.Where(t => t.Date <= endDate);
+                query = query.Where(t => t.Date >= queryParams.StartDate.Value);
             }
 
-            transactions = transactions.Skip((page ?? 0) * (pageSize ?? 25)).Take(pageSize ?? 25);
+            if (queryParams.EndDate.HasValue)
+            {
+                query = query.Where(t => t.Date <= queryParams.EndDate.Value);
+            }
 
-            var result = await transactions
-                .Select(t => _mapper.Map<TransactionDto>(t))
-                .ToListAsync();
+            if (!string.IsNullOrEmpty(queryParams.TransactionKind.ToString()))
+            {
+                if (Enum.TryParse<TransactionKind>(queryParams.TransactionKind.ToString(), true, out var transactionKind))
+                {
+                    query = query.Where(t => t.Kind == transactionKind);
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid value for transaction kind.");
+                }
+            }
 
-            return result;
+            if (!string.IsNullOrEmpty(queryParams.SortBy))
+            {
+                switch (queryParams.SortBy.ToLower())
+                {
+                    case "date":
+                        if (queryParams.SortOrder == SortOrder.desc)
+                        {
+                            query = query.OrderByDescending(t => t.Date);
+                        }
+                        else
+                        {
+                            query = query.OrderBy(t => t.Date);
+                        }
+                        break;
+                    default:
+                        query = query.OrderBy(t => t.Date);
+                        break;
+                }
+            }
+
+            var pagedList = query
+                .ProjectTo<TransactionDto>(_mapper.ConfigurationProvider)
+                .AsNoTracking();
+
+            return await PagedList<TransactionDto>.CreateAsync(pagedList, queryParams.PageNumber, queryParams.PageSize);
         }
 
         public async Task<List<Transaction>> InsertTransactions(List<Transaction> transactions)
@@ -76,6 +106,35 @@ namespace API.Data.Repositories
             await DbTransaction.CommitAsync();
 
             return transactions;
+        }
+
+        public async Task<TransactionDto> CategorizeSingleTransaction(int id, string catCode)
+        {
+            var dbTransaction = _context.Database.BeginTransaction();
+
+            var transaction = await _context.Transactions.FindAsync(id);
+
+            if (transaction == null)
+            {
+                throw new ArgumentException($"Transaction with ID {id} not found.");
+            }
+
+            var category = await _context.Categories.FindAsync(catCode);
+
+            if (category == null)
+            {
+                throw new ArgumentException($"Category with code '{catCode}' not found.");
+            }
+
+            transaction.CatCode = catCode;
+            transaction.Category = category;
+
+            await _context.SaveChangesAsync();
+
+            await dbTransaction.CommitAsync();
+
+            return _mapper.Map<TransactionDto>(transaction);
+
         }
     }
 }

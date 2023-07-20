@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230718180702_PostgresInitial")]
+    [Migration("20230720192026_PostgresInitial")]
     partial class PostgresInitial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace API.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("API.Models.CategoryModel", b =>
+            modelBuilder.Entity("API.Models.Category", b =>
                 {
                     b.Property<string>("Code")
                         .HasColumnType("text");
@@ -34,7 +34,6 @@ namespace API.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ParentCode")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Code");
@@ -42,24 +41,25 @@ namespace API.Data.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("API.Models.TransactionModel", b =>
+            modelBuilder.Entity("API.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
-                    b.Property<float>("Amount")
-                        .HasColumnType("real");
+                    b.Property<double>("Amount")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("BeneficiaryName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("CategoryModelCode")
+                    b.Property<string>("CatCode")
                         .HasColumnType("text");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
@@ -68,20 +68,18 @@ namespace API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Direction")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Direction")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("MCC")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryModelCode");
+                    b.HasIndex("CatCode");
 
                     b.ToTable("Transactions");
                 });
@@ -96,6 +94,10 @@ namespace API.Data.Migrations
 
                     b.Property<double>("Amount")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("CatCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("CategoryCode")
                         .HasColumnType("text");
@@ -112,22 +114,22 @@ namespace API.Data.Migrations
                     b.ToTable("TransactionSplits");
                 });
 
-            modelBuilder.Entity("API.Models.TransactionModel", b =>
+            modelBuilder.Entity("API.Models.Transaction", b =>
                 {
-                    b.HasOne("API.Models.CategoryModel", "CategoryModel")
-                        .WithMany()
-                        .HasForeignKey("CategoryModelCode");
+                    b.HasOne("API.Models.Category", "Category")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CatCode");
 
-                    b.Navigation("CategoryModel");
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("API.Models.TransactionSplit", b =>
                 {
-                    b.HasOne("API.Models.CategoryModel", "Category")
+                    b.HasOne("API.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryCode");
 
-                    b.HasOne("API.Models.TransactionModel", "Transaction")
+                    b.HasOne("API.Models.Transaction", "Transaction")
                         .WithMany("Splits")
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -138,7 +140,12 @@ namespace API.Data.Migrations
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("API.Models.TransactionModel", b =>
+            modelBuilder.Entity("API.Models.Category", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("API.Models.Transaction", b =>
                 {
                     b.Navigation("Splits");
                 });

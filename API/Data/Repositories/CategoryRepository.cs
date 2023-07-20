@@ -15,6 +15,15 @@ namespace API.Data.Repositories
             _context = context;
         }
 
+        public async Task<Category> GetCategoryByCode(string code)
+        {
+            var result = await _context.Categories.FindAsync(code);
+
+            if (result == null) return null;
+
+            return result;
+        }
+
         public async Task<List<Category>> ImportCategoriesFromFile(IFormFile csv)
         {
             using var streamReader = new StreamReader(csv.OpenReadStream());
