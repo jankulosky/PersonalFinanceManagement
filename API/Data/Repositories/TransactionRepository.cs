@@ -34,31 +34,31 @@ namespace API.Data.Repositories
             return await InsertTransactions(transactions);
         }
 
-        public async Task<PagedList<TransactionDto>> GetTransactionList(QueryParams queryParams)
+        public async Task<PagedList<TransactionDto>> GetTransactionList(FileParams fileParams)
         {
             var query = _context.Transactions
                 .Include(x => x.Category)
                 .Include(x => x.Splits)
                 .AsQueryable();
 
-            if (queryParams.TransactionKind.HasValue)
+            if (fileParams.TransactionKind.HasValue)
             {
-                query = query.Where(t => t.Kind == queryParams.TransactionKind.Value);
+                query = query.Where(t => t.Kind == fileParams.TransactionKind.Value);
             }
 
-            if (queryParams.StartDate.HasValue)
+            if (fileParams.StartDate.HasValue)
             {
-                query = query.Where(t => t.Date >= queryParams.StartDate.Value);
+                query = query.Where(t => t.Date >= fileParams.StartDate.Value);
             }
 
-            if (queryParams.EndDate.HasValue)
+            if (fileParams.EndDate.HasValue)
             {
-                query = query.Where(t => t.Date <= queryParams.EndDate.Value);
+                query = query.Where(t => t.Date <= fileParams.EndDate.Value);
             }
 
-            if (!string.IsNullOrEmpty(queryParams.TransactionKind.ToString()))
+            if (!string.IsNullOrEmpty(fileParams.TransactionKind.ToString()))
             {
-                if (Enum.TryParse<TransactionKind>(queryParams.TransactionKind.ToString(), true, out var transactionKind))
+                if (Enum.TryParse<TransactionKind>(fileParams.TransactionKind.ToString(), true, out var transactionKind))
                 {
                     query = query.Where(t => t.Kind == transactionKind);
                 }
@@ -68,12 +68,12 @@ namespace API.Data.Repositories
                 }
             }
 
-            if (!string.IsNullOrEmpty(queryParams.SortBy))
+            if (!string.IsNullOrEmpty(fileParams.SortBy))
             {
-                switch (queryParams.SortBy.ToLower())
+                switch (fileParams.SortBy.ToLower())
                 {
                     case "date":
-                        if (queryParams.SortOrder == SortOrder.desc)
+                        if (fileParams.SortOrder == SortOrder.desc)
                         {
                             query = query.OrderByDescending(t => t.Date);
                         }
@@ -92,7 +92,7 @@ namespace API.Data.Repositories
                 .ProjectTo<TransactionDto>(_mapper.ConfigurationProvider)
                 .AsNoTracking();
 
-            return await PagedList<TransactionDto>.CreateAsync(pagedList, queryParams.PageNumber, queryParams.PageSize);
+            return await PagedList<TransactionDto>.CreateAsync(pagedList, fileParams.PageNumber, fileParams.PageSize);
         }
 
         public async Task<List<Transaction>> InsertTransactions(List<Transaction> transactions)
@@ -108,7 +108,7 @@ namespace API.Data.Repositories
             return transactions;
         }
 
-        public async Task<TransactionDto> CategorizeSingleTransaction(int id, string catCode)
+        public async Task<TransactionDto> CategorizeSingleTransaction(int id, CategorizeTransactionDto catCode)
         {
             var dbTransaction = _context.Database.BeginTransaction();
 
@@ -119,14 +119,14 @@ namespace API.Data.Repositories
                 throw new ArgumentException($"Transaction with ID {id} not found.");
             }
 
-            var category = await _context.Categories.FindAsync(catCode);
+            var category = await _context.Categories.FindAsync(catCode.CatCode);
 
             if (category == null)
             {
                 throw new ArgumentException($"Category with code '{catCode}' not found.");
             }
 
-            transaction.CatCode = catCode;
+            transaction.CatCode = catCode.CatCode;
             transaction.Category = category;
 
             await _context.SaveChangesAsync();
@@ -135,6 +135,45 @@ namespace API.Data.Repositories
 
             return _mapper.Map<TransactionDto>(transaction);
 
+        }
+
+        public async Task<List<AnalyticsDto>> GetTransactionAnalytics(AnalyticsParams analyticsParams)
+        {
+            var query = _context.Transactions
+                .Where(t => t.CatCode != null)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(analyticsParams.CatCode))
+            {
+                query = query.Where(t => t.CatCode == analyticsParams.CatCode);
+            }
+
+            if (analyticsParams.StartDate != null)
+            {
+                query = query.Where(t => t.Date >= analyticsParams.StartDate);
+            }
+
+            if (analyticsParams.EndDate != null)
+            {
+                query = query.Where(t => t.Date <= analyticsParams.EndDate);
+            }
+
+            if (analyticsParams.Direction != null)
+            {
+                query = query.Where(t => t.Direction == analyticsParams.Direction);
+            }
+
+            var spendingAnalytics = await query
+                .GroupBy(t => new { t.CatCode, t.Category.Name })
+                .Select(g => new AnalyticsDto
+                {
+                    CatCode = g.Key.CatCode,
+                    CategoryName = g.Key.Name,
+                    TotalSpending = g.Sum(t => t.Amount)
+                })
+                .ToListAsync();
+
+            return spendingAnalytics;
         }
     }
 }

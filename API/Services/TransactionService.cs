@@ -15,14 +15,19 @@ namespace API.Services
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<TransactionDto> CategorizeTransactionAsync(int id, string catCode)
+        public async Task<TransactionDto> CategorizeTransactionAsync(int id, CategorizeTransactionDto catCode)
         {
             return await _transactionRepository.CategorizeSingleTransaction(id, catCode);
         }
 
-        public async Task<PagedList<TransactionDto>> GetListAsync(QueryParams queryParams)
+        public async Task<PagedList<TransactionDto>> GetListAsync(FileParams fileParams)
         {
-            return await _transactionRepository.GetTransactionList(queryParams);
+            return await _transactionRepository.GetTransactionList(fileParams);
+        }
+
+        public async Task<List<AnalyticsDto>> GetTransactionAnalyticsAsync(AnalyticsParams analyticsParams)
+        {
+            return await _transactionRepository.GetTransactionAnalytics(analyticsParams);
         }
 
         public async Task<List<Transaction>> ImportTransactionsAsync(IFormFile csv)

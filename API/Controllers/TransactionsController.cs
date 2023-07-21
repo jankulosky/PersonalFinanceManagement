@@ -1,4 +1,5 @@
-﻿using API.Extensions;
+﻿using API.DTOs;
+using API.Extensions;
 using API.Helpers;
 using API.Models;
 using API.Services.Interfaces;
@@ -16,11 +17,11 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Transaction>>> GetTransactions([FromQuery] QueryParams queryParams)
+        public async Task<ActionResult<List<Transaction>>> GetTransactions([FromQuery] FileParams fileParams)
         {
             try
             {
-                var transactions = await _transactionService.GetListAsync(queryParams);
+                var transactions = await _transactionService.GetListAsync(fileParams);
 
                 if (transactions == null) return NotFound();
 
@@ -53,16 +54,33 @@ namespace API.Controllers
         }
 
         [HttpPost("{id}/categorize")]
-        public async Task<IActionResult> CategorizeTransaction([FromRoute] int id, [FromBody] string categoryCode)
+        public async Task<IActionResult> CategorizeTransaction([FromRoute] int id, [FromBody] CategorizeTransactionDto catCode)
         {
             try
             {
-                var result = await _transactionService.CategorizeTransactionAsync(id, categoryCode);
+                var result = await _transactionService.CategorizeTransactionAsync(id, catCode);
 
                 if (result == null)
                 {
                     return NotFound("Transaction or category not found.");
                 }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("spending-analytics")]
+        public async Task<ActionResult<List<AnalyticsDto>>> GetSpendingAnalytics([FromQuery] AnalyticsParams analyticsParams)
+        {
+            try
+            {
+                var result = await _transactionService.GetTransactionAnalyticsAsync(analyticsParams);
+
+                if (result == null) return NotFound();
 
                 return Ok(result);
             }
