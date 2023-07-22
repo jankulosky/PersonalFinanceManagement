@@ -108,15 +108,15 @@ namespace API.Data.Repositories
             return transactions;
         }
 
-        public async Task<TransactionDto> CategorizeSingleTransaction(int id, CategorizeTransactionDto catCode)
+        public async Task<TransactionDto> CategorizeSingleTransaction(int transactionId, CategorizeTransactionDto catCode)
         {
             var dbTransaction = _context.Database.BeginTransaction();
 
-            var transaction = await _context.Transactions.FindAsync(id);
+            var transaction = await _context.Transactions.FindAsync(transactionId);
 
             if (transaction == null)
             {
-                throw new ArgumentException($"Transaction with ID {id} not found.");
+                throw new ArgumentException($"Transaction with ID {transactionId} not found.");
             }
 
             var category = await _context.Categories.FindAsync(catCode.CatCode);
@@ -174,6 +174,47 @@ namespace API.Data.Repositories
                 .ToListAsync();
 
             return spendingAnalytics;
+        }
+
+        public async Task<Transaction> GetTransactionWithSplits(int transactionId)
+        {
+            return await _context.Transactions
+                .Include(t => t.Splits)
+                .SingleOrDefaultAsync(t => t.Id == transactionId);
+        }
+
+        public async Task<TransactionDto> SplitTransaction(int transactionId, TransactionSplitDto splitsDto)
+        {
+            var dbTransaction = _context.Database.BeginTransaction();
+
+            var transaction = await GetTransactionWithSplits(transactionId);
+
+            if (transaction == null)
+            {
+                throw new ArgumentException("Transaction not found.");
+            }
+
+            if (transaction.Splits == null)
+            {
+                transaction.Splits = new List<TransactionSplit>();
+            }
+
+            _context.TransactionSplits.RemoveRange(transaction.Splits);
+
+            var splits = splitsDto.SplitsDto.Select(dto => new TransactionSplit
+            {
+                TransactionId = transactionId,
+                Amount = dto.Amount,
+                CatCode = dto.CatCode
+            }).ToList();
+
+            await _context.TransactionSplits.AddRangeAsync(splits);
+
+            await _context.SaveChangesAsync();
+
+            await dbTransaction.CommitAsync();
+
+            return _mapper.Map<TransactionDto>(transaction);
         }
     }
 }

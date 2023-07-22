@@ -89,5 +89,22 @@ namespace API.Controllers
                 return BadRequest($"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpPost("{id}/split")]
+        public async Task<IActionResult> SplitTransaction([FromRoute] int id, [FromBody] TransactionSplitDto splits)
+        {
+            try
+            {
+                var result = await _transactionService.SplitTransactionAsync(id, splits);
+
+                if (result == null) return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

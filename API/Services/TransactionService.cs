@@ -15,9 +15,9 @@ namespace API.Services
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<TransactionDto> CategorizeTransactionAsync(int id, CategorizeTransactionDto catCode)
+        public async Task<TransactionDto> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode)
         {
-            return await _transactionRepository.CategorizeSingleTransaction(id, catCode);
+            return await _transactionRepository.CategorizeSingleTransaction(transactionId, catCode);
         }
 
         public async Task<PagedList<TransactionDto>> GetListAsync(FileParams fileParams)
@@ -33,6 +33,11 @@ namespace API.Services
         public async Task<List<Transaction>> ImportTransactionsAsync(IFormFile csv)
         {
             return await _transactionRepository.ImportTransactionsFromFile(csv);
+        }
+
+        public async Task<TransactionDto> SplitTransactionAsync(int transactionId, TransactionSplitDto splits)
+        {
+            return await _transactionRepository.SplitTransaction(transactionId, splits);
         }
     }
 }

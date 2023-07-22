@@ -25,7 +25,7 @@ namespace API.Mappings
                 .ForMember(dest => dest.ParentCode, opt => opt.MapFrom(src => src.ParentCode))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
             CreateMap<TransactionSplit, SplitsDto>()
-                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
+                .ForMember(dest => dest.CatCode, opt => opt.MapFrom(src => src.CatCode))
                 .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount));
         }
     }
