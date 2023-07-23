@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using API.Extensions;
+using API.Helpers;
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,13 +15,32 @@ namespace API.Controllers
         }
 
         [HttpPost("import")]
-        public async Task<ActionResult<List<Category>>> ImportCategories(IFormFile csv)
+        public async Task<IActionResult> ImportCategories(IFormFile csv)
         {
             try
             {
                 var categories = await _categoryService.ImportCategoriesAsync(csv);
 
                 if (categories == null) return NotFound();
+
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCategories([FromQuery] PaginationParams paginationParams)
+        {
+            try
+            {
+                var categories = await _categoryService.GetCategoryListAsync(paginationParams);
+
+                if (categories == null) return NotFound();
+
+                Response.AddPaginationHeader(categories.CurrentPage, categories.PageSize, categories.TotalCount, categories.TotalPages);
 
                 return Ok(categories);
             }
