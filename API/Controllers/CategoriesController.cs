@@ -1,4 +1,5 @@
-﻿using API.Extensions;
+﻿using API.DTOs;
+using API.Extensions;
 using API.Helpers;
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCategories([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] PaginationParams paginationParams)
         {
             try
             {

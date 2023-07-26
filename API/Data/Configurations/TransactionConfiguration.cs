@@ -21,6 +21,12 @@ namespace API.Data.Configurations
                 .Property(t => t.Currency)
                 .HasMaxLength(3);
             builder.HasMany(t => t.Splits);
+            builder
+                .Property(t => t.Direction)
+                .HasConversion<string>();
+            builder
+                .Property(t => t.Kind)
+                .HasConversion<string>();
         }
     }
 }

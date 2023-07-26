@@ -1,7 +1,6 @@
 ﻿using API.DTOs;
 using API.Extensions;
 using API.Helpers;
-using API.Models;
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +16,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Transaction>>> GetTransactions([FromQuery] FileParams fileParams)
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions([FromQuery] FileParams fileParams)
         {
             try
             {
@@ -37,7 +36,7 @@ namespace API.Controllers
         }
 
         [HttpPost("import")]
-        public async Task<ActionResult<List<Transaction>>> ImportTransactions(IFormFile csv)
+        public async Task<IActionResult> ImportTransactions(IFormFile csv)
         {
             try
             {
@@ -74,7 +73,7 @@ namespace API.Controllers
         }
 
         [HttpGet("spending-analytics")]
-        public async Task<ActionResult<List<AnalyticsDto>>> GetSpendingAnalytics([FromQuery] AnalyticsParams analyticsParams)
+        public async Task<ActionResult<IEnumerable<AnalyticsDto>>> GetSpendingAnalytics([FromQuery] AnalyticsParams analyticsParams)
         {
             try
             {
@@ -96,6 +95,23 @@ namespace API.Controllers
             try
             {
                 var result = await _transactionService.SplitTransactionAsync(id, splits);
+
+                if (result == null) return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPost("auto-categorize")]
+        public async Task<IActionResult> AutoCategorizeTransactions()
+        {
+            try
+            {
+                var result = await _transactionService.AutoCategorizeAsync();
 
                 if (result == null) return NotFound();
 

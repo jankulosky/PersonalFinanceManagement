@@ -2,13 +2,13 @@
 using API.DTOs;
 using API.Enumerations;
 using API.Helpers;
-using API.Mappings;
 using API.Models;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
+using Newtonsoft.Json;
+using System.Data;
 
 namespace API.Data.Repositories
 {
@@ -21,17 +21,6 @@ namespace API.Data.Repositories
         {
             _context = context;
             _mapper = mapper;
-        }
-
-        public async Task<List<Transaction>> ImportTransactionsFromFile(IFormFile csv)
-        {
-            var streamReader = new StreamReader(csv.OpenReadStream());
-            var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
-            csvReader.Context.RegisterClassMap<TransactionMapper>();
-
-            List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
-
-            return await InsertTransactions(transactions);
         }
 
         public async Task<PagedList<TransactionDto>> GetTransactionList(FileParams fileParams)
@@ -99,7 +88,17 @@ namespace API.Data.Repositories
         {
             var DbTransaction = _context.Database.BeginTransaction();
 
-            await _context.Transactions.AddRangeAsync(transactions);
+            foreach (var transaction in transactions)
+            {
+                var existingTransaction = await _context.Transactions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Id == transaction.Id);
+
+                if (existingTransaction == null)
+                {
+                    await _context.Transactions.AddRangeAsync(transaction);
+                }
+            }
 
             await _context.SaveChangesAsync();
 
@@ -194,12 +193,29 @@ namespace API.Data.Repositories
                 throw new ArgumentException("Transaction not found.");
             }
 
-            if (transaction.Splits == null)
+            if (transaction.Splits.Any())
             {
-                transaction.Splits = new List<TransactionSplit>();
+                _context.TransactionSplits.RemoveRange(transaction.Splits);
             }
 
-            _context.TransactionSplits.RemoveRange(transaction.Splits);
+            var invalidCategories = splitsDto.SplitsDto
+                .Select(dto => dto.CatCode)
+                .Except(_context.Categories.Select(c => c.Code))
+                .ToList();
+
+            if (invalidCategories.Any())
+            {
+                await dbTransaction.RollbackAsync();
+                throw new ArgumentException($"Invalid category codes: {string.Join(", ", invalidCategories)}");
+            }
+
+            double totalSplitAmount = splitsDto.SplitsDto.Sum(dto => dto.Amount);
+
+            if (totalSplitAmount > transaction.Amount)
+            {
+                await dbTransaction.RollbackAsync();
+                throw new ArgumentException("Total split amount cannot exceed the transaction amount.");
+            }
 
             var splits = splitsDto.SplitsDto.Select(dto => new TransactionSplit
             {
@@ -215,6 +231,47 @@ namespace API.Data.Repositories
             await dbTransaction.CommitAsync();
 
             return _mapper.Map<TransactionDto>(transaction);
+        }
+
+        public async Task<string> AutoCategorize()
+        {
+            var transactions = _context.Transactions
+                .Include(t => t.Category)
+                .ToList();
+
+            List<RuleParams> rules = new();
+
+            using (StreamReader sr = new("Data/rules.json"))
+            {
+                string json = await sr.ReadToEndAsync();
+                rules = JsonConvert.DeserializeObject<List<RuleParams>>(json).ToList();
+            }
+
+            int categorizedCount = 0;
+
+            foreach (var transaction in transactions)
+            {
+                if (!string.IsNullOrEmpty(transaction.CatCode))
+                {
+                    continue;
+                }
+
+                foreach (var rule in rules)
+                {
+                    if (rule.Mcc.Any(x => x == transaction.MCC) ||
+                        rule.Keywords.Any(x => transaction.BeneficiaryName.ToLower().Contains(x.ToLower()) ||
+                                               transaction.Description.ToLower().Contains(x.ToLower())))
+                    {
+                        transaction.CatCode = rule.CatCode;
+                        categorizedCount++;
+                        break;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return $"{categorizedCount} transactions were automatically categorized.";
         }
     }
 }

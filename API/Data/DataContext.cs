@@ -8,7 +8,6 @@ namespace API.Data
     public class DataContext : DbContext
     {
         public DbSet<Transaction> Transactions { get; set; }
-        
         public DbSet<Category> Categories { get; set; }
         public DbSet<TransactionSplit> TransactionSplits { get; set; }
 

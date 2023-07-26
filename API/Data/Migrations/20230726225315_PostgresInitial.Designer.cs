@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230720192026_PostgresInitial")]
+    [Migration("20230726225315_PostgresInitial")]
     partial class PostgresInitial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,11 +68,13 @@ namespace API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Direction")
-                        .HasColumnType("integer");
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("MCC")
                         .HasColumnType("integer");

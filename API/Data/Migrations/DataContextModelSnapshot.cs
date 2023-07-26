@@ -66,11 +66,13 @@ namespace API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Direction")
-                        .HasColumnType("integer");
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("MCC")
                         .HasColumnType("integer");

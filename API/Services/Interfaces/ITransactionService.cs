@@ -11,5 +11,6 @@ namespace API.Services.Interfaces
         Task<TransactionDto> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode);
         Task<List<AnalyticsDto>> GetTransactionAnalyticsAsync(AnalyticsParams analyticsParams);
         Task<TransactionDto> SplitTransactionAsync(int transactionId, TransactionSplitDto splits);
+        Task<string> AutoCategorizeAsync();
     }
 }

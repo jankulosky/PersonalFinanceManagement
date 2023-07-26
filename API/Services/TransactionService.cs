@@ -1,8 +1,11 @@
 ﻿using API.Data.Interfaces;
 using API.DTOs;
 using API.Helpers;
+using API.Mappings;
 using API.Models;
 using API.Services.Interfaces;
+using CsvHelper;
+using System.Globalization;
 
 namespace API.Services
 {
@@ -13,6 +16,11 @@ namespace API.Services
         public TransactionService(ITransactionRepository transactionRepository)
         {
             _transactionRepository = transactionRepository;
+        }
+
+        public async Task<string> AutoCategorizeAsync()
+        {
+            return await _transactionRepository.AutoCategorize();
         }
 
         public async Task<TransactionDto> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode)
@@ -32,7 +40,14 @@ namespace API.Services
 
         public async Task<List<Transaction>> ImportTransactionsAsync(IFormFile csv)
         {
-            return await _transactionRepository.ImportTransactionsFromFile(csv);
+            var streamReader = new StreamReader(csv.OpenReadStream());
+            var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+            csvReader.Context.RegisterClassMap<TransactionMapper>();
+
+            List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
+
+            return await _transactionRepository.InsertTransactions(transactions);
         }
 
         public async Task<TransactionDto> SplitTransactionAsync(int transactionId, TransactionSplitDto splits)
