@@ -681,7 +681,7 @@
     "catCode": "U",
     "parentCode": "",
     "name": "Food & Dining",
-    "keywords": [ "food delivery" ],
-    "mcc": [ 5811 ]
+    "keywords": [],
+    "mcc": []
   }
 ]

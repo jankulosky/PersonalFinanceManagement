@@ -14,7 +14,7 @@ namespace API.DTOs
         public int? MCC { get; set; }
         public string Kind { get; set; }
         public string? CatCode { get; set; }
-        public CategoryDto? CategoryDto { get; set; }
-        public List<SplitsDto> SplitsDto { get; set; }
+        public CategoryDto? Category { get; set; }
+        public List<SplitsDto> Splits { get; set; }
     }
 }

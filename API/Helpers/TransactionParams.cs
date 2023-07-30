@@ -2,7 +2,7 @@
 
 namespace API.Helpers
 {
-    public class FileParams : PaginationParams
+    public class TransactionParams : PaginationParams
     {
         public TransactionKind? TransactionKind { get; set; }
         public DateTime? StartDate { get; set; }

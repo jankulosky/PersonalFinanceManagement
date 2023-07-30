@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { FileParams } from '../models/fileParams';
+import { TransactionParams } from '../models/transactionParams';
 import {
   getPaginatedResult,
   getPaginationHeaders,
@@ -18,17 +18,28 @@ export class TransactionsService {
     private settingsService: SettingsService
   ) {}
 
-  getTransactions(fileParams: FileParams) {
+  getTransactions(transactionParams: TransactionParams) {
     let params = getPaginationHeaders(
-      fileParams.pageNumber,
-      fileParams.pageSize
+      transactionParams.pageNumber,
+      transactionParams.pageSize
     );
 
-    params = params.append('kind', fileParams.kind);
-    params = params.append('startDate', fileParams.startDate);
-    params = params.append('endDate', fileParams.endDate);
-    params = params.append('sortBy', fileParams.sortBy);
-    params = params.append('sortOrder', fileParams.sortOrder);
+    params = params.append('TransactionKind', transactionParams.kind);
+    if (transactionParams.startDate) {
+      params = params.append(
+        'startDate',
+        transactionParams.startDate.toISOString().split('T')[0]
+      );
+    }
+
+    if (transactionParams.endDate) {
+      params = params.append(
+        'endDate',
+        transactionParams.endDate.toISOString().split('T')[0]
+      );
+    }
+    params = params.append('sortBy', transactionParams.sortBy);
+    params = params.append('sortOrder', transactionParams.sortOrder);
 
     return getPaginatedResult<Transaction[]>(
       `${this.settingsService.baseEndpoint}/${this.settingsService.transactionsEndpoint}`,

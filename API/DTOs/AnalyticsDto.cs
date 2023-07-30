@@ -2,8 +2,8 @@
 {
     public class AnalyticsDto
     {
-        public string? CatCode { get; set; }
-        public string CategoryName { get; set; }
-        public double TotalSpending { get; set; }
+        public string CatCode { get; set; }
+        public double Amount { get; set; }
+        public int Count { get; set; }
     }
 }

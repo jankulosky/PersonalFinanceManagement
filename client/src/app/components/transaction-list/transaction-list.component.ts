@@ -2,10 +2,11 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { FileParams } from 'src/app/core/models/fileParams';
+import { TransactionParams } from 'src/app/core/models/transactionParams';
 import { Pagination } from 'src/app/core/models/pagination';
 import { Transaction } from 'src/app/core/models/transaction';
 import { TransactionsService } from 'src/app/core/services/transactions.service';
+import { MatInput } from '@angular/material/input';
 
 @Component({
   selector: 'app-transaction-list',
@@ -28,13 +29,25 @@ export class TransactionListComponent implements OnInit {
 
   transactions: Transaction[] = [];
   dataSource!: MatTableDataSource<Transaction>;
-  fileParams: FileParams = new FileParams();
+  transactionParams: TransactionParams = new TransactionParams();
   pagination!: Pagination;
   errorMessage: string = '';
   showFirstLastButtons = true;
 
+  kindList = [
+    { value: '', display: '- All Kinds -' },
+    { value: 'pmt', display: 'pmt' },
+    { value: 'wdw', display: 'wdw' },
+    { value: 'dep', display: 'dep' },
+    { value: 'fee', display: 'fee' },
+    { value: 'sal', display: 'sal' },
+  ];
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('kindSelect') kindSelect!: MatInput;
+  @ViewChild('fromInput', { read: MatInput }) fromInput!: MatInput;
+  @ViewChild('toInput', { read: MatInput }) toInput!: MatInput;
 
   constructor(private transactionsService: TransactionsService) {}
 
@@ -43,7 +56,7 @@ export class TransactionListComponent implements OnInit {
   }
 
   loadTransactions() {
-    this.transactionsService.getTransactions(this.fileParams).subscribe({
+    this.transactionsService.getTransactions(this.transactionParams).subscribe({
       next: (response) => {
         if (response.pagination) {
           this.dataSource = new MatTableDataSource(response.result);
@@ -57,18 +70,42 @@ export class TransactionListComponent implements OnInit {
     });
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  onPageChange(event: PageEvent) {
+    this.transactionParams.pageNumber = event.pageIndex + 1;
+    this.transactionParams.pageSize = event.pageSize;
 
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+    this.loadTransactions();
+  }
+
+  handleKindChange(event: any) {
+    this.transactionParams.kind = event.value;
+  }
+
+  handleStartDateChange(event: any) {
+    if (event.value) {
+      this.transactionParams.startDate = event.value;
     }
   }
 
-  onPageChange(event: PageEvent) {
-    this.fileParams.pageNumber = event.pageIndex + 1;
-    this.fileParams.pageSize = event.pageSize;
+  handleEndDateChange(event: any) {
+    if (event.value) {
+      this.transactionParams.endDate = event.value;
+    }
+  }
+
+  handleFilterTransactions() {
+    this.loadTransactions();
+  }
+
+  handleClearSelections() {
+    this.transactionParams.kind = '';
+    this.transactionParams.startDate = null;
+    this.transactionParams.endDate = null;
+
+    this.kindSelect.value = '';
+    this.fromInput.value = '';
+    this.toInput.value = '';
+
     this.loadTransactions();
   }
 }

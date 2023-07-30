@@ -33,17 +33,17 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] CategoryParams categoryParams)
         {
             try
             {
-                var categories = await _categoryService.GetCategoryListAsync(paginationParams);
+                var categories = await _categoryService.GetCategoryListAsync(categoryParams);
 
                 if (categories == null) return NotFound();
 
                 Response.AddPaginationHeader(categories.CurrentPage, categories.PageSize, categories.TotalCount, categories.TotalPages);
 
-                return Ok(categories);
+                return Ok(new { items = categories });
             }
             catch (Exception ex)
             {

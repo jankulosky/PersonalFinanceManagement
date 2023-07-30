@@ -22,42 +22,60 @@ namespace API.Data.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedList<CategoryDto>> GetCategoryList(PaginationParams paginationParams)
+        public async Task<PagedList<CategoryDto>> GetCategoryList(CategoryParams categoryParams)
         {
             var query = _context.Categories
                 .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                 .AsNoTracking();
 
-            return await PagedList<CategoryDto>.CreateAsync(query, paginationParams.PageNumber, paginationParams.PageSize);
-        }
-
-        public async Task<List<Category>> ImportCategoriesFromFile(IFormFile csv)
-        {
-            using var streamReader = new StreamReader(csv.OpenReadStream());
-            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
-
-            csvReader.Context.RegisterClassMap<CategoryMapper>();
-
-            var categories = csvReader.GetRecords<Category>().ToList();
-
-            foreach (var category in categories)
+            if (!string.IsNullOrEmpty(categoryParams.ParentCode))
             {
-                var dbCategory = await _context.Categories.FindAsync(category.Code);
-
-                if (dbCategory == null)
-                {
-                    _context.Categories.Add(category);
-                }
-                else
-                {
-                    dbCategory.ParentCode = category.ParentCode;
-                    dbCategory.Name = category.Name;
-                }
+                query = query.Where(c => c.ParentCode == categoryParams.ParentCode);
             }
 
-            await _context.SaveChangesAsync();
+            return await PagedList<CategoryDto>.CreateAsync(query, categoryParams.PageNumber, categoryParams.PageSize);
+        }
 
-            return categories;
+        public async Task<Response> ImportCategoriesFromFile(IFormFile csv)
+        {
+            try
+            {
+                using var streamReader = new StreamReader(csv.OpenReadStream());
+                using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+                csvReader.Context.RegisterClassMap<CategoryMapper>();
+
+                var categories = csvReader.GetRecords<Category>().ToList();
+
+                foreach (var category in categories)
+                {
+                    var dbCategory = await _context.Categories.FindAsync(category.Code);
+
+                    if (dbCategory == null)
+                    {
+                        _context.Categories.Add(category);
+                    }
+                    else
+                    {
+                        dbCategory.ParentCode = category.ParentCode;
+                        dbCategory.Name = category.Name;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return new Response
+                {
+                    Message = "Categories imported successfully."
+                };
+            }
+            catch (Exception)
+            {
+                return new Response
+                {
+                    Error = $"An error occured while reading file: '{csv.FileName}'. Please ensure that the file you imported is a valid CSV file and it contains the expected headers in the correct order."
+                };
+            }
         }
     }
 }

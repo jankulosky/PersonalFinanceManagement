@@ -9,6 +9,15 @@ namespace API.Enumerations
         wdw,
         pmt,
         fee,
+        inc,
+        rev,
+        adj,
+        lnd,
+        lnr,
+        fcx,
+        aop,
+        acl,
+        spl,
         sal
     }
 }

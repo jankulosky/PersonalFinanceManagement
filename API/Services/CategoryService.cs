@@ -1,7 +1,6 @@
 ﻿using API.Data.Interfaces;
 using API.DTOs;
 using API.Helpers;
-using API.Models;
 using API.Services.Interfaces;
 
 namespace API.Services
@@ -15,12 +14,12 @@ namespace API.Services
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<PagedList<CategoryDto>> GetCategoryListAsync(PaginationParams paginationParams)
+        public async Task<PagedList<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams)
         {
-            return await _categoryRepository.GetCategoryList(paginationParams);
+            return await _categoryRepository.GetCategoryList(categoryParams);
         }
 
-        public async Task<List<Category>> ImportCategoriesAsync(IFormFile csv)
+        public async Task<Response> ImportCategoriesAsync(IFormFile csv)
         {
             return await _categoryRepository.ImportCategoriesFromFile(csv);
         }

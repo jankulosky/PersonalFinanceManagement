@@ -1,0 +1,72 @@
+table {
+  width: 100%;
+}
+
+.wrapper {
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(55deg, #4285a1 0%, #56be5f 100%);
+  margin: 0px auto;
+  display: flex;
+
+  .balance p {
+    margin: 0;
+  }
+
+  .info {
+    align-items: center;
+    display: flex;
+    padding: 50px;
+
+    .account {
+      margin-left: 30px;
+    }
+
+    .current-account {
+      margin: 0;
+      font-size: 25px;
+      color: #f3ecec;
+    }
+
+    .account-id {
+      margin-top: 5px;
+      color: #60ffff;
+    }
+
+    .account-id p {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  .balance {
+    align-items: center;
+    margin-right: 150px;
+
+    .amount {
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .balance {
+      margin-top: 5px;
+      font-size: 15px;
+      padding-left: 10px;
+      color: #60ffff;
+      font-weight: 600;
+    }
+  }
+}
+
+.avatar {
+  margin-left: 150px;
+  width: 75px;
+  height: 75px;
+  background-image: url("https://xsgames.co/randomusers/avatar.php?g=female");
+  background-size: cover;
+  border-radius: 50%;
+  position: relative;
+}

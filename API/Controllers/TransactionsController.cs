@@ -16,7 +16,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions([FromQuery] FileParams fileParams)
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions([FromQuery] TransactionParams fileParams)
         {
             try
             {
@@ -42,7 +42,10 @@ namespace API.Controllers
             {
                 var transactions = await _transactionService.ImportTransactionsAsync(csv);
 
-                if (transactions == null) return NotFound();
+                if (transactions.Error != null && transactions.Error.Any())
+                {
+                    return BadRequest(new { errors = transactions.Error });
+                }
 
                 return Ok(transactions);
             }
@@ -59,27 +62,10 @@ namespace API.Controllers
             {
                 var result = await _transactionService.CategorizeTransactionAsync(id, catCode);
 
-                if (result == null)
+                if (result.Errors != null && result.Errors.Any())
                 {
-                    return NotFound("Transaction or category not found.");
+                    return BadRequest(new { errors = result.Errors });
                 }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"An error occurred: {ex.Message}");
-            }
-        }
-
-        [HttpGet("spending-analytics")]
-        public async Task<ActionResult<IEnumerable<AnalyticsDto>>> GetSpendingAnalytics([FromQuery] AnalyticsParams analyticsParams)
-        {
-            try
-            {
-                var result = await _transactionService.GetTransactionAnalyticsAsync(analyticsParams);
-
-                if (result == null) return NotFound();
 
                 return Ok(result);
             }
@@ -96,7 +82,10 @@ namespace API.Controllers
             {
                 var result = await _transactionService.SplitTransactionAsync(id, splits);
 
-                if (result == null) return NotFound();
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    return BadRequest(new { errors = result.Errors });
+                }
 
                 return Ok(result);
             }

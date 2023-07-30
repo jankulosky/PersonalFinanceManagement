@@ -2,6 +2,6 @@
 {
     public class TransactionSplitDto
     {
-        public List<SplitsDto> SplitsDto { get; set; }
+        public List<SplitsDto> Splits { get; set; }
     }
 }

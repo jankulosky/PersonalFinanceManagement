@@ -5,9 +5,9 @@ import {
   getPaginatedResult,
   getPaginationHeaders,
 } from '../helpers/paginationHelper';
-import { FileParams } from '../models/fileParams';
 import { Category } from '../models/category';
 import { map } from 'rxjs';
+import { CategoryParams } from '../models/categoryParams';
 
 @Injectable({
   providedIn: 'root',
@@ -18,11 +18,13 @@ export class CategoriesService {
     private settingsService: SettingsService
   ) {}
 
-  getTransactions(fileParams: FileParams) {
+  getTransactions(categoryParams: CategoryParams) {
     let params = getPaginationHeaders(
-      fileParams.pageNumber,
-      fileParams.pageSize
+      categoryParams.pageNumber,
+      categoryParams.pageSize
     );
+
+    params = params.append('ParentCode', categoryParams.parentcode);
 
     return getPaginatedResult<Category[]>(
       `${this.settingsService.baseEndpoint}/${this.settingsService.categoriesEndpoint}`,

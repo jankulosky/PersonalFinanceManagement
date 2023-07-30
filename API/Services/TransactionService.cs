@@ -18,39 +18,49 @@ namespace API.Services
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<string> AutoCategorizeAsync()
+        public async Task<Response> AutoCategorizeAsync()
         {
             return await _transactionRepository.AutoCategorize();
         }
 
-        public async Task<TransactionDto> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode)
+        public async Task<TransactionResponse> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode)
         {
             return await _transactionRepository.CategorizeSingleTransaction(transactionId, catCode);
         }
 
-        public async Task<PagedList<TransactionDto>> GetListAsync(FileParams fileParams)
+        public async Task<PagedList<TransactionDto>> GetListAsync(TransactionParams fileParams)
         {
             return await _transactionRepository.GetTransactionList(fileParams);
         }
 
-        public async Task<List<AnalyticsDto>> GetTransactionAnalyticsAsync(AnalyticsParams analyticsParams)
+        public async Task<Response> ImportTransactionsAsync(IFormFile csv)
         {
-            return await _transactionRepository.GetTransactionAnalytics(analyticsParams);
+            try
+            {
+                var streamReader = new StreamReader(csv.OpenReadStream());
+                var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+                csvReader.Context.RegisterClassMap<TransactionMapper>();
+
+                List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
+
+                await _transactionRepository.InsertTransactions(transactions);
+
+                return new Response
+                {
+                    Message = "Transactions imported successfully."
+                };
+            }
+            catch (Exception)
+            {
+                return new Response
+                {
+                    Error = $"An error occured while reading file: '{csv.FileName}'. Please ensure that the file you imported is a valid CSV file and it contains the expected headers in the correct order."
+                };
+            }
         }
 
-        public async Task<List<Transaction>> ImportTransactionsAsync(IFormFile csv)
-        {
-            var streamReader = new StreamReader(csv.OpenReadStream());
-            var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
-
-            csvReader.Context.RegisterClassMap<TransactionMapper>();
-
-            List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
-
-            return await _transactionRepository.InsertTransactions(transactions);
-        }
-
-        public async Task<TransactionDto> SplitTransactionAsync(int transactionId, TransactionSplitDto splits)
+        public async Task<TransactionResponse> SplitTransactionAsync(int transactionId, TransactionSplitDto splits)
         {
             return await _transactionRepository.SplitTransaction(transactionId, splits);
         }

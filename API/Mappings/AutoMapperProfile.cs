@@ -18,8 +18,8 @@ namespace API.Mappings
                 .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
                 .ForMember(dest => dest.MCC, opt => opt.MapFrom(src => src.MCC))
                 .ForMember(dest => dest.Kind, opt => opt.MapFrom(src => src.Kind.ToString()))
-                .ForMember(dest => dest.CategoryDto, opt => opt.MapFrom(src => src.Category))
-                .ForMember(dest => dest.SplitsDto, opt => opt.MapFrom(src => src.Splits));
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
+                .ForMember(dest => dest.Splits, opt => opt.MapFrom(src => src.Splits));
             CreateMap<Category, CategoryDto>()
                 .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(dest => dest.ParentCode, opt => opt.MapFrom(src => src.ParentCode))

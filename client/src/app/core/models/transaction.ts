@@ -1,4 +1,5 @@
 import { Category } from './category';
+import { Kind } from './kind';
 
 export interface Transaction {
   id: number;
@@ -9,6 +10,6 @@ export interface Transaction {
   description: string;
   currency: string;
   mcc?: number;
-  kind: string;
+  kind: Kind;
   category?: Category;
 }

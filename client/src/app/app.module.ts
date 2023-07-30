@@ -15,9 +15,13 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { NavComponent } from './components/nav/nav.component';
+import { FooterComponent } from './components/footer/footer.component';
 
 @NgModule({
-  declarations: [AppComponent, TransactionListComponent],
+  declarations: [AppComponent, TransactionListComponent, NavComponent, FooterComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -33,6 +37,8 @@ import { MatInputModule } from '@angular/material/input';
     MatSortModule,
     MatIconModule,
     MatInputModule,
+    MatNativeDateModule,
+    MatButtonModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

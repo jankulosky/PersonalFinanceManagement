@@ -35,6 +35,7 @@ namespace API.Extensions
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             return services;
         }

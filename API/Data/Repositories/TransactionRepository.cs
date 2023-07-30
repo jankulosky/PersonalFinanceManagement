@@ -23,31 +23,31 @@ namespace API.Data.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedList<TransactionDto>> GetTransactionList(FileParams fileParams)
+        public async Task<PagedList<TransactionDto>> GetTransactionList(TransactionParams transactionParams)
         {
             var query = _context.Transactions
                 .Include(x => x.Category)
                 .Include(x => x.Splits)
                 .AsQueryable();
 
-            if (fileParams.TransactionKind.HasValue)
+            if (transactionParams.TransactionKind.HasValue)
             {
-                query = query.Where(t => t.Kind == fileParams.TransactionKind.Value);
+                query = query.Where(t => t.Kind == transactionParams.TransactionKind.Value);
             }
 
-            if (fileParams.StartDate.HasValue)
+            if (transactionParams.StartDate.HasValue)
             {
-                query = query.Where(t => t.Date >= fileParams.StartDate.Value);
+                query = query.Where(t => t.Date >= transactionParams.StartDate.Value);
             }
 
-            if (fileParams.EndDate.HasValue)
+            if (transactionParams.EndDate.HasValue)
             {
-                query = query.Where(t => t.Date <= fileParams.EndDate.Value);
+                query = query.Where(t => t.Date <= transactionParams.EndDate.Value);
             }
 
-            if (!string.IsNullOrEmpty(fileParams.TransactionKind.ToString()))
+            if (!string.IsNullOrEmpty(transactionParams.TransactionKind.ToString()))
             {
-                if (Enum.TryParse<TransactionKind>(fileParams.TransactionKind.ToString(), true, out var transactionKind))
+                if (Enum.TryParse<TransactionKind>(transactionParams.TransactionKind.ToString(), true, out var transactionKind))
                 {
                     query = query.Where(t => t.Kind == transactionKind);
                 }
@@ -57,12 +57,12 @@ namespace API.Data.Repositories
                 }
             }
 
-            if (!string.IsNullOrEmpty(fileParams.SortBy))
+            if (!string.IsNullOrEmpty(transactionParams.SortBy))
             {
-                switch (fileParams.SortBy.ToLower())
+                switch (transactionParams.SortBy.ToLower())
                 {
                     case "date":
-                        if (fileParams.SortOrder == SortOrder.desc)
+                        if (transactionParams.SortOrder == SortOrder.desc)
                         {
                             query = query.OrderByDescending(t => t.Date);
                         }
@@ -81,7 +81,7 @@ namespace API.Data.Repositories
                 .ProjectTo<TransactionDto>(_mapper.ConfigurationProvider)
                 .AsNoTracking();
 
-            return await PagedList<TransactionDto>.CreateAsync(pagedList, fileParams.PageNumber, fileParams.PageSize);
+            return await PagedList<TransactionDto>.CreateAsync(pagedList, transactionParams.PageNumber, transactionParams.PageSize);
         }
 
         public async Task<List<Transaction>> InsertTransactions(List<Transaction> transactions)
@@ -107,22 +107,28 @@ namespace API.Data.Repositories
             return transactions;
         }
 
-        public async Task<TransactionDto> CategorizeSingleTransaction(int transactionId, CategorizeTransactionDto catCode)
+        public async Task<TransactionResponse> CategorizeSingleTransaction(int transactionId, CategorizeTransactionDto catCode)
         {
             var dbTransaction = _context.Database.BeginTransaction();
 
             var transaction = await _context.Transactions.FindAsync(transactionId);
 
-            if (transaction == null)
-            {
-                throw new ArgumentException($"Transaction with ID {transactionId} not found.");
-            }
-
             var category = await _context.Categories.FindAsync(catCode.CatCode);
 
             if (category == null)
             {
-                throw new ArgumentException($"Category with code '{catCode}' not found.");
+                return new TransactionResponse
+                {
+                    Errors = new List<ErrorDetails>
+                    {
+                        new ErrorDetails
+                        {
+                            Tag = "category",
+                            Error = "not-found",
+                            Message = $"Category with code '{catCode.CatCode}' not found."
+                        }
+                    }
+                };
             }
 
             transaction.CatCode = catCode.CatCode;
@@ -132,11 +138,13 @@ namespace API.Data.Repositories
 
             await dbTransaction.CommitAsync();
 
-            return _mapper.Map<TransactionDto>(transaction);
-
+            return new TransactionResponse
+            {
+                Transaction = _mapper.Map<TransactionDto>(transaction)
+            };
         }
 
-        public async Task<List<AnalyticsDto>> GetTransactionAnalytics(AnalyticsParams analyticsParams)
+        public async Task<List<Transaction>> GetTransactionAnalytics(AnalyticsParams analyticsParams)
         {
             var query = _context.Transactions
                 .Where(t => t.CatCode != null)
@@ -144,7 +152,7 @@ namespace API.Data.Repositories
 
             if (!string.IsNullOrEmpty(analyticsParams.CatCode))
             {
-                query = query.Where(t => t.CatCode == analyticsParams.CatCode);
+                query = query.Where(t => analyticsParams.CatCode.Contains(t.CatCode));
             }
 
             if (analyticsParams.StartDate != null)
@@ -162,17 +170,7 @@ namespace API.Data.Repositories
                 query = query.Where(t => t.Direction == analyticsParams.Direction);
             }
 
-            var spendingAnalytics = await query
-                .GroupBy(t => new { t.CatCode, t.Category.Name })
-                .Select(g => new AnalyticsDto
-                {
-                    CatCode = g.Key.CatCode,
-                    CategoryName = g.Key.Name,
-                    TotalSpending = g.Sum(t => t.Amount)
-                })
-                .ToListAsync();
-
-            return spendingAnalytics;
+            return await query.ToListAsync();
         }
 
         public async Task<Transaction> GetTransactionWithSplits(int transactionId)
@@ -182,7 +180,7 @@ namespace API.Data.Repositories
                 .SingleOrDefaultAsync(t => t.Id == transactionId);
         }
 
-        public async Task<TransactionDto> SplitTransaction(int transactionId, TransactionSplitDto splitsDto)
+        public async Task<TransactionResponse> SplitTransaction(int transactionId, TransactionSplitDto splitsDto)
         {
             var dbTransaction = _context.Database.BeginTransaction();
 
@@ -190,7 +188,18 @@ namespace API.Data.Repositories
 
             if (transaction == null)
             {
-                throw new ArgumentException("Transaction not found.");
+                return new TransactionResponse
+                {
+                    Errors = new List<ErrorDetails>
+                    {
+                        new ErrorDetails
+                        {
+                            Tag = "transaction",
+                            Error = "not-found",
+                            Message = $"Transaction with ID {transactionId} not found."
+                        }
+                    }
+                };
             }
 
             if (transaction.Splits.Any())
@@ -198,7 +207,7 @@ namespace API.Data.Repositories
                 _context.TransactionSplits.RemoveRange(transaction.Splits);
             }
 
-            var invalidCategories = splitsDto.SplitsDto
+            var invalidCategories = splitsDto.Splits
                 .Select(dto => dto.CatCode)
                 .Except(_context.Categories.Select(c => c.Code))
                 .ToList();
@@ -206,18 +215,55 @@ namespace API.Data.Repositories
             if (invalidCategories.Any())
             {
                 await dbTransaction.RollbackAsync();
-                throw new ArgumentException($"Invalid category codes: {string.Join(", ", invalidCategories)}");
+                return new TransactionResponse
+                {
+                    Errors = invalidCategories.Select(categoryCode => new ErrorDetails
+                    {
+                        Tag = "category",
+                        Error = "invalid",
+                        Message = $"Invalid category code: {categoryCode}"
+                    }).ToList()
+                };
             }
 
-            double totalSplitAmount = splitsDto.SplitsDto.Sum(dto => dto.Amount);
+            double totalSplitAmount = splitsDto.Splits.Sum(dto => dto.Amount);
 
             if (totalSplitAmount > transaction.Amount)
             {
                 await dbTransaction.RollbackAsync();
-                throw new ArgumentException("Total split amount cannot exceed the transaction amount.");
+                return new TransactionResponse
+                {
+                    Errors = new List<ErrorDetails>
+                    {
+                        new ErrorDetails
+                        {
+                            Tag = "amount",
+                            Error = "max-length",
+                            Message = "Total split amount cannot exceed the transaction amount."
+                        }
+                    }
+                };
             }
 
-            var splits = splitsDto.SplitsDto.Select(dto => new TransactionSplit
+            double splitAmountSum = splitsDto.Splits.Sum(dto => dto.Amount);
+            if (Math.Abs(splitAmountSum - transaction.Amount) > 0.001)
+            {
+                await dbTransaction.RollbackAsync();
+                return new TransactionResponse
+                {
+                    Errors = new List<ErrorDetails>
+                    {
+                        new ErrorDetails
+                        {
+                            Tag = "amount",
+                            Error = "invalid-sum",
+                            Message = "Sum of split amounts must be equal to the transaction amount."
+                        }
+                    }
+                };
+            }
+
+            var splits = splitsDto.Splits.Select(dto => new TransactionSplit
             {
                 TransactionId = transactionId,
                 Amount = dto.Amount,
@@ -230,10 +276,13 @@ namespace API.Data.Repositories
 
             await dbTransaction.CommitAsync();
 
-            return _mapper.Map<TransactionDto>(transaction);
+            return new TransactionResponse
+            {
+                Transaction = _mapper.Map<TransactionDto>(transaction)
+            };
         }
 
-        public async Task<string> AutoCategorize()
+        public async Task<Response> AutoCategorize()
         {
             var transactions = _context.Transactions
                 .Include(t => t.Category)
@@ -271,7 +320,10 @@ namespace API.Data.Repositories
 
             await _context.SaveChangesAsync();
 
-            return $"{categorizedCount} transactions were automatically categorized.";
+            return new Response
+            {
+                Message = $"{categorizedCount} transactions were automatically categorized."
+            };
         }
     }
 }
