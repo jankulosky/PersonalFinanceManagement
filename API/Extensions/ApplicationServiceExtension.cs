@@ -31,9 +31,10 @@ namespace API.Extensions
                 options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
             });
 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ITransactionRepository, TransactionRepository>();
-            services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
 

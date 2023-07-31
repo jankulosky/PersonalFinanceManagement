@@ -7,21 +7,21 @@ namespace API.Services
 {
     public class CategoryService : ICategoryService
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CategoryService(ICategoryRepository categoryRepository)
+        public CategoryService(IUnitOfWork unitOfWork)
         {
-            _categoryRepository = categoryRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<List<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams)
         {
-            return await _categoryRepository.GetCategoryList(categoryParams);
+            return await _unitOfWork.CategoryRepository.GetCategoryList(categoryParams);
         }
 
         public async Task<Response> ImportCategoriesAsync(IFormFile csv)
         {
-            return await _categoryRepository.ImportCategoriesFromFile(csv);
+            return await _unitOfWork.CategoryRepository.ImportCategoriesFromFile(csv);
         }
     }
 }

@@ -11,26 +11,26 @@ namespace API.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly ITransactionRepository _transactionRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TransactionService(ITransactionRepository transactionRepository)
+        public TransactionService(IUnitOfWork unitOfWork)
         {
-            _transactionRepository = transactionRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Response> AutoCategorizeAsync()
         {
-            return await _transactionRepository.AutoCategorize();
+            return await _unitOfWork.TransactionRepository.AutoCategorize();
         }
 
         public async Task<TransactionResponse> CategorizeTransactionAsync(int transactionId, CategorizeTransactionDto catCode)
         {
-            return await _transactionRepository.CategorizeSingleTransaction(transactionId, catCode);
+            return await _unitOfWork.TransactionRepository.CategorizeSingleTransaction(transactionId, catCode);
         }
 
         public async Task<PagedList<TransactionDto>> GetListAsync(TransactionParams fileParams)
         {
-            return await _transactionRepository.GetTransactionList(fileParams);
+            return await _unitOfWork.TransactionRepository.GetTransactionList(fileParams);
         }
 
         public async Task<Response> ImportTransactionsAsync(IFormFile csv)
@@ -44,7 +44,7 @@ namespace API.Services
 
                 List<Transaction> transactions = csvReader.GetRecords<Transaction>().ToList();
 
-                await _transactionRepository.InsertTransactions(transactions);
+                await _unitOfWork.TransactionRepository.InsertTransactions(transactions);
 
                 return new Response
                 {
@@ -62,7 +62,7 @@ namespace API.Services
 
         public async Task<TransactionResponse> SplitTransactionAsync(int transactionId, TransactionSplitDto splits)
         {
-            return await _transactionRepository.SplitTransaction(transactionId, splits);
+            return await _unitOfWork.TransactionRepository.SplitTransaction(transactionId, splits);
         }
     }
 }
