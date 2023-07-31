@@ -14,7 +14,7 @@ namespace API.Services
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<PagedList<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams)
+        public async Task<List<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams)
         {
             return await _categoryRepository.GetCategoryList(categoryParams);
         }

@@ -6,6 +6,6 @@ namespace API.Services.Interfaces
     public interface ICategoryService
     {
         Task<Response> ImportCategoriesAsync(IFormFile csv);
-        Task<PagedList<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams);
+        Task<List<CategoryDto>> GetCategoryListAsync(CategoryParams categoryParams);
     }
 }

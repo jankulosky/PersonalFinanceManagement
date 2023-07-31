@@ -1,6 +1,6 @@
 ﻿namespace API.Helpers
 {
-    public class CategoryParams : PaginationParams
+    public class CategoryParams
     {
         public string? ParentCode { get; set; }
     }

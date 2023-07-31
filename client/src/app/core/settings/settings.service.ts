@@ -17,4 +17,8 @@ export class SettingsService {
   get categoriesEndpoint(): string {
     return 'Categories';
   }
+
+  get categorizeEndpoint(): string {
+    return 'categorize';
+  }
 }

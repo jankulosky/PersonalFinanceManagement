@@ -41,9 +41,7 @@ namespace API.Controllers
 
                 if (categories == null) return NotFound();
 
-                Response.AddPaginationHeader(categories.CurrentPage, categories.PageSize, categories.TotalCount, categories.TotalPages);
-
-                return Ok(new { items = categories });
+                return Ok(categories);
             }
             catch (Exception ex)
             {

@@ -6,6 +6,6 @@ namespace API.Data.Interfaces
     public interface ICategoryRepository
     {
         Task<Response> ImportCategoriesFromFile(IFormFile csv);
-        Task<PagedList<CategoryDto>> GetCategoryList(CategoryParams categoryParams);
+        Task<List<CategoryDto>> GetCategoryList(CategoryParams categoryParams);
     }
 }

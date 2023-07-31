@@ -7,7 +7,7 @@ import {
 } from '../helpers/paginationHelper';
 import { Transaction } from '../models/transaction';
 import { SettingsService } from '../settings/settings.service';
-import { map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -50,5 +50,14 @@ export class TransactionsService {
         return response;
       })
     );
+  }
+
+  categorizeTransaction(
+    transactionId: number,
+    catCode: string
+  ): Observable<Transaction> {
+    const url = `${this.settingsService.baseEndpoint}/${this.settingsService.transactionsEndpoint}/${transactionId}/${this.settingsService.categorizeEndpoint}`;
+    const body = { catCode: catCode };
+    return this.http.post<Transaction>(url, body);
   }
 }

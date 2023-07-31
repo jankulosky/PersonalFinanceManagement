@@ -11,5 +11,6 @@ export interface Transaction {
   currency: string;
   mcc?: number;
   kind: Kind;
+  catCode: string;
   category?: Category;
 }

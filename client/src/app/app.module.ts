@@ -19,9 +19,19 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NavComponent } from './components/nav/nav.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { CategorizeComponent } from './components/categorize/categorize.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
-  declarations: [AppComponent, TransactionListComponent, NavComponent, FooterComponent],
+  declarations: [
+    AppComponent,
+    TransactionListComponent,
+    NavComponent,
+    FooterComponent,
+    CategorizeComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -39,6 +49,11 @@ import { FooterComponent } from './components/footer/footer.component';
     MatInputModule,
     MatNativeDateModule,
     MatButtonModule,
+    MatDialogModule,
+    MatTooltipModule,
+    ToastrModule.forRoot({
+      positionClass: 'toast-bottom-right',
+    }),
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -7,6 +7,9 @@ import { Pagination } from 'src/app/core/models/pagination';
 import { Transaction } from 'src/app/core/models/transaction';
 import { TransactionsService } from 'src/app/core/services/transactions.service';
 import { MatInput } from '@angular/material/input';
+import { CategorizeComponent } from '../categorize/categorize.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-transaction-list',
@@ -49,7 +52,11 @@ export class TransactionListComponent implements OnInit {
   @ViewChild('fromInput', { read: MatInput }) fromInput!: MatInput;
   @ViewChild('toInput', { read: MatInput }) toInput!: MatInput;
 
-  constructor(private transactionsService: TransactionsService) {}
+  constructor(
+    private transactionsService: TransactionsService,
+    public dialog: MatDialog,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -107,5 +114,37 @@ export class TransactionListComponent implements OnInit {
     this.toInput.value = '';
 
     this.loadTransactions();
+  }
+
+  openCategorizeDialog(transaction: Transaction) {
+    const dialogRef = this.dialog.open(CategorizeComponent, {
+      width: '600px',
+      height: '250px',
+      data: { transactinId: transaction.id },
+    });
+
+    dialogRef.afterClosed().subscribe(({ catCode }) => {
+      if (catCode) {
+        this.transactionsService
+          .categorizeTransaction(transaction.id, catCode)
+          .subscribe({
+            next: (response) => {
+              const i = this.transactions.findIndex(
+                (t) => t.id == transaction.id
+              );
+              if (i >= 0) {
+                this.transactions[i] = response;
+              }
+              this.toastr.success(
+                'Transaction categorized successfully!',
+                'Success'
+              );
+            },
+            error: (err) => {
+              this.toastr.error(err.error);
+            },
+          });
+      }
+    });
   }
 }

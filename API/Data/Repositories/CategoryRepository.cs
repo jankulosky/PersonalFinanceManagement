@@ -22,18 +22,20 @@ namespace API.Data.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedList<CategoryDto>> GetCategoryList(CategoryParams categoryParams)
+        public async Task<List<CategoryDto>> GetCategoryList(CategoryParams categoryParams)
         {
             var query = _context.Categories
-                .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
-                .AsNoTracking();
+                .AsQueryable();
+
 
             if (!string.IsNullOrEmpty(categoryParams.ParentCode))
             {
                 query = query.Where(c => c.ParentCode == categoryParams.ParentCode);
             }
 
-            return await PagedList<CategoryDto>.CreateAsync(query, categoryParams.PageNumber, categoryParams.PageSize);
+            return await query
+                .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
 
         public async Task<Response> ImportCategoriesFromFile(IFormFile csv)

@@ -1,0 +1,20 @@
+<h1 mat-dialog-title>Categorize transaction</h1>
+<div mat-dialog-content>
+    <mat-form-field appearance="fill">
+        <mat-label>Category Code</mat-label>
+        <mat-select [(value)]="catCode">
+            <mat-option *ngFor="let category of categories" [value]="category.code"
+                [matTooltip]="getCategoryTooltip(category)">
+                {{ category.code }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+<div mat-dialog-action [align]="'center'">
+    <button class="me-2" mat-raised-button color="warn" mat-dialog-close>
+        Close
+    </button>
+    <button mat-raised-button color="primary" (click)="onConfirm()">
+        Save
+    </button>
+</div>

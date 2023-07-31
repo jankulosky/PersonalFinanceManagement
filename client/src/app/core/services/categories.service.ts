@@ -1,12 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { SettingsService } from '../settings/settings.service';
-import {
-  getPaginatedResult,
-  getPaginationHeaders,
-} from '../helpers/paginationHelper';
 import { Category } from '../models/category';
-import { map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { CategoryParams } from '../models/categoryParams';
 
 @Injectable({
@@ -18,22 +14,14 @@ export class CategoriesService {
     private settingsService: SettingsService
   ) {}
 
-  getTransactions(categoryParams: CategoryParams) {
-    let params = getPaginationHeaders(
-      categoryParams.pageNumber,
-      categoryParams.pageSize
-    );
+  getCategories(categoryParams: CategoryParams): Observable<Category[]> {
+    let params = new HttpParams();
 
-    params = params.append('ParentCode', categoryParams.parentcode);
+    params = params.append('ParentCode', categoryParams.parentCode);
 
-    return getPaginatedResult<Category[]>(
+    return this.http.get<Category[]>(
       `${this.settingsService.baseEndpoint}/${this.settingsService.categoriesEndpoint}`,
-      params,
-      this.http
-    ).pipe(
-      map((response) => {
-        return response;
-      })
+      { params: params }
     );
   }
 }
