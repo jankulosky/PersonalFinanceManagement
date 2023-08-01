@@ -1,5 +1,4 @@
 ﻿using API.DTOs;
-using API.Extensions;
 using API.Helpers;
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +21,10 @@ namespace API.Controllers
             {
                 var categories = await _categoryService.ImportCategoriesAsync(csv);
 
-                if (categories == null) return NotFound();
+                if (categories.Error != null && categories.Error.Any())
+                {
+                    return BadRequest(new { errors = categories.Error });
+                }
 
                 return Ok(categories);
             }
