@@ -16,11 +16,11 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions([FromQuery] TransactionParams fileParams)
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions([FromQuery] TransactionParams transactionParams)
         {
             try
             {
-                var transactions = await _transactionService.GetListAsync(fileParams);
+                var transactions = await _transactionService.GetListAsync(transactionParams);
 
                 if (transactions == null) return NotFound();
 
